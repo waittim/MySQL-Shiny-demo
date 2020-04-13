@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+library(tidyverse)
+```
+
+
+```{r}
+library(readr)
+loan_origin <- read_csv("~/Desktop/projects/database/project 2/lending-club-loan-data/loan.csv")
+View(loan_origin)
+```
+
+```{r}
+str(loan_origin)
+```
+
+
+```{r}
+loan <- loan_origin%>% 
+  select(addr_state,annual_inc,verification_status,emp_title,home_ownership,emp_length,total_acc,delinq_2yrs,open_acc,delinq_amnt,earliest_cr_line,pub_rec_bankruptcies,pub_rec,int_rate,grade,last_credit_pull_d,loan_amnt,loan_status,disbursement_method,title,zip_code,funded_amnt,funded_amnt_inv,initial_list_status,purpose,inq_fi,inq_last_12m,mths_since_recent_inq,member_id,mths_since_recent_bc,num_actv_bc_tl,num_bc_sats,num_bc_tl,total_bc_limit,mo_sin_rcnt_tl,num_accts_ever_120_pd,num_sats,num_tl_120dpd_2m,num_tl_30dpd,num_tl_90g_dpd_24m,num_tl_op_past_12m,tot_cur_bal,installment,mo_sin_old_il_acct,mths_since_rcnt_il,num_il_tl,mths_since_rcnt_il)
+```
+
+
+
+```{r}
+loan_nona <- na.omit(loan)
+```
+
+
+```{r}
+write.csv(loan,"/Users/jiayiwang/Desktop/projects/database/project2/loan.csv")
+```
