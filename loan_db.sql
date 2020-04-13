@@ -49,7 +49,6 @@ num_tl_30dpd INT(5),
 num_tl_90g_dpd_24m INT(5),
 num_tl_op_past_12m INT(5),
 tot_cur_bal INT(9),
-inqury_id INT(9),
 inq_fi VARCHAR(10),
 inq_last_12m VARCHAR(20),
 mths_since_recent_inq VARCHAR(20),
@@ -118,7 +117,7 @@ FROM raw;
 DROP TABLE IF EXISTS bankcard;
 CREATE TABLE bankcard(
 id INT(9) PRIMARY KEY,
-mths_since_recent_bc INT(9),
+mths_since_recent_bc VARCHAR(10),
 num_actv_bc_tl INT(9),
 num_bc_sats INT(9),
 num_bc_tl INT(9),
@@ -150,15 +149,15 @@ FROM raw;
 
 -- inquries table
 DROP TABLE IF EXISTS inquries;
-CREATE TABLE inquires(
-inqury_id INT(9) PRIMARY KEY,
+CREATE TABLE inquries(
+id INT(9) PRIMARY KEY,
 inq_fi VARCHAR(10),
 inq_last_12m VARCHAR(20),
 mths_since_recent_inq VARCHAR(20)
 );
 
-INSERT INTO bank_accounts
-SELECT inqury_id,inq_fi,inq_last_12m,mths_since_recent_inq
+INSERT INTO inquries
+SELECT id,inq_fi,inq_last_12m,mths_since_recent_inq
 FROM raw;
 
 -- installment table
@@ -174,3 +173,5 @@ num_il_tl INT(9)
 INSERT INTO installment
 SELECT id,installment,mo_sin_old_il_acct,mths_since_rcnt_il,num_il_tl
 FROM raw;
+
+
