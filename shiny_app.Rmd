@@ -9,11 +9,37 @@ library(RMySQL)
 library(tidyverse)
 library(shinydashboard)
 library(dashboardthemes)
+library(ggplot2)
 ```
 
 ```{r}
+table_name <- c("loan","borrower","bankcard","bank_accounts","inquries","installment","raw")
+loan <- c("id", "int_rate", "grade","loan_amnt","loan_status","disbursement_method","title","zip_code","funded_amnt","funded_amnt_inv","initial_list_status","purpose")
+borrower <- c("id","addr_state","annual_inc","verification_status","home_ownership","last_credit_pull_d","emp_title","emp_length","total_acc","delinq_2yrs","open_acc","delinq_amnt","earliest_cr_line","pub_rec_bankruptcies","pub_rec")
+bankcard <- c("id","mths_since_recent_bc","num_actv_bc_tl","num_bc_sats","num_bc_tl","total_bc_limit")
+bank_accounts <- c("id","mo_sin_rcnt_tl","num_accts_ever_120_pd","num_sats","num_tl_120dpd_2m","num_tl_30dpd","num_tl_90g_dpd_24m","num_tl_op_past_12m","tot_cur_bal")
+inquries <- c("id","inq_fi","inq_last_12m","mths_since_recent_inq")
+installment <- c("id","installment","mo_sin_old_il_acct","mths_since_rcnt_il","num_il_tl")
+raw <- c("id", "int_rate", "grade","loan_amnt","loan_status","disbursement_method","title","zip_code","funded_amnt","funded_amnt_inv","initial_list_status","purpose","addr_state","annual_inc","verification_status","home_ownership","last_credit_pull_d","emp_title","emp_length","total_acc","delinq_2yrs","open_acc","delinq_amnt","earliest_cr_line","pub_rec_bankruptcies","pub_rec","mths_since_recent_bc","num_actv_bc_tl","num_bc_sats","num_bc_tl","total_bc_limit","mo_sin_rcnt_tl","num_accts_ever_120_pd","num_sats","num_tl_120dpd_2m","num_tl_30dpd","num_tl_90g_dpd_24m","num_tl_op_past_12m","tot_cur_bal","inq_fi","inq_last_12m","mths_since_recent_inq","installment","mo_sin_old_il_acct","mths_since_rcnt_il","num_il_tl")
+
+table_df <- as.data.frame(matrix(data = NA, nrow = 46,ncol = 7))
+names(table_df) <- table_name
+table_df$loan[1:length(loan)] <- loan
+table_df$borrower[1:length(borrower)] <- borrower
+table_df$bankcard[1:length(bankcard)] <- bankcard
+table_df$bank_accounts[1:length(bank_accounts)] <- bank_accounts
+table_df$inquries[1:length(inquries)] <- inquries
+table_df$installment[1:length(installment)] <- installment
+table_df$raw[1:length(raw)] <- raw
+```
+
+
+
+
+
+```{r}
 ### creating custom theme object
-theme_lapop <- shinyDashboardThemeDIY(
+theme_loan <- shinyDashboardThemeDIY(
   
     ### general
     appFontFamily = "Arial"
@@ -148,8 +174,6 @@ theme_lapop <- shinyDashboardThemeDIY(
 
 header <- dashboardHeader(title = "Loan Dashboard", titleWidth = 300)
 
-
-
 sidebar <- dashboardSidebar(
   width = 300,
   sidebarMenuOutput("sidebar")
@@ -158,256 +182,391 @@ sidebar <- dashboardSidebar(
 
 
 body <- dashboardBody(
-
-  tabItems(
-    tabItem(tabName = "overview",
-            # Boxes need to be put in a row (or column)
-            fluidRow(
-            box(title = "Survey Demographics",
-                "This page shows the overall demographics of respondents of the overall survey. Note that this does not reflect the demographics of those who answered a selected topic or question.",
-                solidHeader = TRUE, 
-                collapsible = TRUE,
-                width = 12)
-          ),
-            fluidRow(
-                  # Dynamic valueBoxes
-                  valueBoxOutput("numberBox"),
-                  valueBoxOutput("femalepercentBox"),
-                  valueBoxOutput("ageBox")
-                ),
-            fluidRow(
-              tabBox(title="Histogram of Respondents' age",
-                     tabPanel("Overall",  plotOutput("overview_hist")),
-                     tabPanel("Gender",  plotOutput("overview_hist_gender"))
-                   ),
-              tabBox(title="Density of Respondents' age",
-                     tabPanel("Overall",  plotOutput("overview_density")),
-                     tabPanel("Gender",  plotOutput("overview_density_gender"))
-                   ),
   
-              box(title = "Total number of respondents each year",
-                  plotOutput("overview_year"),
-                  solidHeader = TRUE,
-                  collapsible = TRUE),
-              box(title = "Female ratio of respondents each year", 
-                  plotOutput("overview_gender_year"),
-                  solidHeader = TRUE,
-                  collapsible = TRUE) #,
+  tabItems(
+    # origin table
+    tabItem(tabName = "origin_table",
+            h2("Original Table"),
+            fluidRow(
+              # row number control
               box(solidHeader = TRUE,
                   collapsible = TRUE,
-                  title = "Box content here", br(), "More box content",
-                  sliderInput("slider", "Slider input:", 1, 100, 50),
-                  textInput("text", "Text input:")
-                  )
-              )
+                  width = 12,
+                  title = "Observation number",
+                  sliderInput(inputId = "row_num", label = "Choose observation number:", min = 1, max = 1000, value = 20)
+                  ),
+              #table output
+              box(
+                  width = 12,
+                  tableOutput("select_table"),
+                  solidHeader = TRUE,
+                  collapsible = TRUE)
+            )
             ),
     
-    
-  tabItem(tabName = "basic",
-          fluidRow(
-            box(title = "Basic Analysis", #br(), 
-                "Basic Analysis is about the background of a specific question, such as the count of different answers, the difference in answers across ages, and the distribution of answers.",
-                solidHeader = TRUE, 
-                collapsible = TRUE),
-            box(title = "Question Introduction:", #br(), 
-                "There is an introduction about the topic and the question selected before, which we do not have the information yet.",
-                solidHeader = TRUE, 
-                collapsible = TRUE)
-          ),
-          fluidRow(
-                  # Dynamic valueBoxes
-                  valueBoxOutput("basic_scaleBox"),
-                  valueBoxOutput("basic_meanBox"),
-                  valueBoxOutput("basic_modeBox")
-                ),
-          fluidRow(
-            tabBox(title="Distribution of Answers",
-                   tabPanel("Overall",  plotOutput("basic_scorehist")),
-                   tabPanel("Gender",  plotOutput("basic_scorehist_gender"))
-                   ),
-            tabBox(title="Average Answer for Each Age",
-                   tabPanel("Overall",  plotOutput("basic_agedist")),
-                   tabPanel("Gender",  plotOutput("basic_agedist_gender"))
-                   ),
-            box(title = "Boxplot of Gender",
-                plotOutput("basic_genderscore"),
-                solidHeader = TRUE,
-                collapsible = TRUE)#,
-            #box(textOutput("basic_question1"))
+    # data histogram
+    tabItem(tabName = "one_col",
+            h2("Attribute Description"),
+            # Boxes need to be put in a row (or column)
+            fluidRow(
+              #select solumn
+              box(uiOutput("column_select"),
+                  sliderInput(inputId = "row_num2", 
+                              label = "Choose observation number:", 
+                              min = 1, max = 1000, value = 20)),
+              box(title = "Attribute Introduction:",
+                  "There is an introduction about the attribute selected for visualization, which we do not have the information yet.",
+                  solidHeader = TRUE,
+                  collapsible = TRUE)
+            ),
             
-          ),
-          fluidRow(
-            box(title = "Original table:",
-                tableOutput("basic_table"),
-                solidHeader = TRUE,
-                collapsible = TRUE)
+            # show histogram
+            fluidRow(
+              box(title = "Histogram",
+                  width = 12,
+                  plotOutput("col_plot"))
+              )
+            
+            ),
+    
+    # update
+    tabItem(tabName = "update",
+            h2("Operation - Update"),
+            fluidRow(
+              # update inputs
+              box(uiOutput("update_where_column"),
+                  uiOutput("update_where_value"),
+                  uiOutput("update_column"),
+                  uiOutput("update_to_be"),
+                  actionButton(inputId = "click_update",label = "Confirm Update",width = 200),
+                  textOutput("update_result")
+                  )
+            ),
+            fluidRow(
+              # show updated table
+              box(title = "Update result",
+                  width = 12,
+                  tableOutput("update_table"),
+                  solidHeader = TRUE,
+                  collapsible = TRUE)
             )
-          )
+    ),
+    
+    # insert
+    tabItem(tabName = "insert",
+            h2("Operation - Insert"),
+            fluidRow(
+              #show the target table
+              box(title = "Target table",
+                  width = 12,
+                  tableOutput("insert_table_before"),
+                  solidHeader = TRUE,
+                  collapsible = TRUE)
+            ),
+            fluidRow(
+              # inputs
+              box(uiOutput("insert_values"),
+                  actionButton(inputId = "click_insert",label = "Confirm Insert",width = 200),
+                  textOutput("insert_result"),
+                  width = 12)
+            ),
+            fluidRow(
+              # show the table after insert
+              box(title = "Insert result",
+                  width = 12,
+                  tableOutput("insert_table"),
+                  solidHeader = TRUE,
+                  collapsible = TRUE)
+            )
+    ),
+    
+    # delete
+    tabItem(tabName = "delete",
+            h2("Operation - Delete"),
+            fluidRow(
+              box(uiOutput("delete_where_column"),
+                  uiOutput("delete_where_value"),
+                  actionButton(inputId = "click_delete",label = "Cofirm Delete",width = 200),
+                  textOutput("delete_result"))
+            )
+      
+    )
+    
+    
+
 
   )
 )
 ```
 
 
+
 ```{r}
-conn <- dbConnect(MySQL(), 
-                  dbname = "my_guitar_shop", 
+ui <- dashboardPage(header, sidebar, body,
+                    theme_loan)
+
+server <- function(input, output) {
+  
+  # Sidebar ui
+  output$sidebar <- renderMenu({
+    sidebarMenu(
+      selectInput(inputId = "table", 
+                  label = "Choose table:", 
+                  choices = table_name, 
+                  #selected = "loan", 
+                  multiple = FALSE),
+      menuItem("Original Table", tabName = "origin_table", icon = icon("dashboard")),
+      menuItem("Attribute description", tabName = "one_col", icon = icon("dashboard")),
+      menuItem("Operation", tabName = "update", icon = icon("dashboard"),
+               menuSubItem("Update", tabName = "update"),
+               menuSubItem("Insert", tabName = "insert"),
+               menuSubItem("Delete", tabName = "delete")),
+      menuItem("Download Data", icon = icon("download"), 
+               href = "https://www.kaggle.com/wendykan/lending-club-loan-data")
+
+    )
+  })
+  
+  
+  # origin_table
+  output$select_table <- renderTable({
+    table <- input$table
+    column <- input$column
+    row_num <- input$row_num
+    
+    sql_sentence <- paste0("SELECT * FROM ",table," LIMIT ",row_num,";")
+    
+    conn <- dbConnect(MySQL(), 
+                  dbname = "loan", 
                   username="root", 
                   password="root",
                   host='127.0.0.1',
                   port = 3306,
                   client.flag=CLIENT_MULTI_STATEMENTS)
-data = dbGetQuery(conn, "SELECT * FROM products")
-dbDisconnect(conn)
-```
-
-```{r}
-ui <- dashboardPage(header, sidebar, body,
-                    theme_lapop)
-
-server <- function(input, output) {
-  
-  # Sidebar
-  output$sidebar <- renderMenu({
-    sidebarMenu(
-      selectInput("country", "Choose countries:", country, selected = "Canada", multiple = TRUE),
-      selectInput("year", "Choose year:", year, selected = c(2014,2016,2018), multiple = TRUE),
-      selectInput("topic1", "Choose topic:", topic, selected = "Democracy", multiple = FALSE),
-      selectInput("question1", "Choose question:", questions[input$topic1], multiple = FALSE),
-      menuItem("Survey Demographics", tabName = "overview", icon = icon("dashboard")),
-      menuItem("Basic Analysis", tabName = "basic", icon = icon("chart-bar")),
-      menuItem("Time Series Analysis", tabName = "timeseries", icon = icon("chart-line")),
-      menuItem("Cross Analysis", tabName = "cross", icon = icon("th")),
-      menuItem("Download Data", icon = icon("download"), href = "http://lapop.ccp.ucr.ac.cr/en/")
-
-    )
-  })
-  
-  # Overview
-  output$numberBox <- renderValueBox({
-    df <- data %>% 
-      filter(year %in% input$year,
-             country %in% input$country)
+    data <- dbGetQuery(conn, sql_sentence)
+    dbDisconnect(conn)
     
-    valueBox(nrow(df), "Respondents", icon = icon("users"),color = "olive")
+    data
   })
   
-  output$overview_hist <- renderPlot({
-    data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      ggplot()+
-      geom_bar(aes(x=age),width = 1, fill = "#1C6771")+
-      theme_classic()+  
-      theme(legend.position = "top")
-  })
-  
-  output$overview_hist_gender <- renderPlot({
-    data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      ggplot()+
-      geom_bar(aes(x=age,fill=gender), width = 1, position = "dodge")+
-      theme_classic()+  
-      theme(legend.position = "top")
-  })
-
-  
-
-  
-  
-  # Basic
-  
-  output$basic_question1 <- renderText({
-    question1 <- input$question1
-    question1
-  })
-  
-  
-  output$basic_scaleBox <- renderValueBox({
-    question1 <- input$question1
-    df <- data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      select(question1)
-    valueBox(paste0(min(unique(as.matrix(df))), " - ",max(unique(as.matrix(df)))), "Answer Scale", icon = icon("list-ol"),color = "olive")
-  })
-  
-  
-  
-  output$basic_scorehist <- renderPlot({
-    question1 <- input$question1
-    data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      group_by(!!as.symbol(question1), gender) %>% 
-      summarise(number = n()) %>% 
-      ggplot() +
-      geom_col(aes(x = !!as.symbol(question1), y=number), width = 0.7, fill = "#1C6771") +
-      # geom_smooth(aes(x = !!as.symbol(question1), y=number),se = FALSE, color = "lightblue", lwd = 2)+
-      theme_classic()+
-      labs(title = paste0("Distribution for ", question1), x="Answer")+
-      theme(legend.position = "top")
-  })
-  
-  
-  
-  output$time_heatplot <- renderPlot({
-    question1 <- input$question1
-    
-    filter_data <- data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) 
-    whole_number <- nrow(filter_data)
-    
-    data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      group_by(!!as.symbol(question1), year) %>%
-      summarise(number = n()/whole_number) %>% 
-      ggplot(aes(as.factor(!!as.symbol(question1)), as.factor(year)))+
-      geom_tile(aes(fill = number), color = "white")+
-      geom_text(aes(label = paste0(round(number*100, digits = 2), "%")),color = "white",check_overlap = TRUE)+
-      theme_minimal()+
-      labs(x=question1, y="Year")+
-      theme(legend.position = "none")+
-      scale_fill_gradient(low = "white",high = "#1C6771")
-  })
-  
-  
-  #Cross
-  output$cross_select <- renderUI({
-    selectInput("question2",
-                "Choose question for cross:",
-                questions[input$topic2], 
-                selected = "Quality of Municipal Services", 
+  # one_col
+  output$column_select <- renderUI({
+    selectInput(inputId = "column",
+                label = "Choose attribute:",
+                choices = na.omit(table_df[input$table]),
+                selected = "id", 
                 multiple = FALSE)
   })
   
-
-  output$cross_heatplot <- renderPlot({
-    question1 <- input$question1
-    question2 <- input$question2
+  output$col_plot <- renderPlot({
+    table <- input$table
+    column <- input$column
+    row_num <- input$row_num2
     
-    filter_data <- data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) 
-    whole_number <- nrow(filter_data)
+    sql_sentence <- paste0("SELECT * FROM ",table," LIMIT ",row_num,";")
+    
+    conn <- dbConnect(MySQL(), 
+                  dbname = "loan", 
+                  username="root", 
+                  password="root",
+                  host='127.0.0.1',
+                  port = 3306,
+                  client.flag=CLIENT_MULTI_STATEMENTS)
+    data <- dbGetQuery(conn, sql_sentence)
+    dbDisconnect(conn)
     
     data %>% 
-      filter(year %in% input$year,
-             country %in% input$country) %>% 
-      group_by(!!as.symbol(question1), !!as.symbol(question2)) %>%
-      summarise(number = n()/whole_number) %>% 
-      ggplot(aes(as.factor(!!as.symbol(question1)), as.factor(!!as.symbol(question2))))+
-      geom_tile(aes(fill = number), color = "white")+
-      geom_text(aes(label = paste0(round(number*100, digits = 2), "%")),color = "white",check_overlap = TRUE)+
-      theme_minimal()+
-      labs(x=question1, y=question2)+
-      theme(legend.position = "none")+
-      scale_fill_gradient(low = "white",high = "#1C6771")
-
+      ggplot()+
+      geom_bar(aes(!!as.symbol(column)))+
+      theme_bw()
+      
   })
+  
+  ##############################################
+  # update
+  output$update_where_column <- renderUI({
+    selectInput(inputId = "update_where_column",
+                label = "Choose an attribute to locate:",
+                choices = na.omit(table_df[input$table]),
+                multiple = FALSE)
+  })
+  
+  output$update_where_value <- renderUI({
+    textInput(inputId = "update_where_value",
+              value = 1,
+              label = "Input the value to locate:")
+  })
+    
+  output$update_column <- renderUI({
+    selectInput(inputId = "update_column",
+                label = "Choose an attribute you want to update:",
+                choices = na.omit(table_df[input$table]),
+                multiple = FALSE)
+  })
+      
+  output$update_to_be <- renderUI({
+    textInput(inputId = "update_to_be",
+              label = "Update the value to be:")
+  })
+        
+  observeEvent(input$click_update, {
+    table <- input$table
+    update_where_column <- input$update_where_column
+    update_where_value <- input$update_where_value
+    update_column <- input$update_column
+    update_to_be <- input$update_to_be
+    
+    sql_sentence <- paste0("UPDATE ",table,
+                           " SET ",update_column," = ",update_to_be, 
+                           " WHERE ",update_where_column," = ",update_where_value,";")
+    
+    conn <- dbConnect(MySQL(), 
+                  dbname = "loan", 
+                  username="root", 
+                  password="root",
+                  host='127.0.0.1',
+                  port = 3306,
+                  client.flag=CLIENT_MULTI_STATEMENTS)
+    row_effected <- dbExecute(conn, sql_sentence)
+    dbDisconnect(conn)
+    
+    output$update_result <- renderText({
+        paste0(row_effected,"row(s) has been effected.")
+      })
+    
+    # output$update_table <- renderTable({
+    #   table <- input$table
+    #   update_where_column <- input$update_where_column
+    #   update_where_value <- input$update_where_value
+    # 
+    #   
+    #   sql_sentence <- paste0("SELECT * FROM ",table,
+    #                          " WHERE ",update_where_column," = ",update_where_value,";")
+    #   
+    #   conn <- dbConnect(MySQL(), 
+    #                 dbname = "loan", 
+    #                 username="root", 
+    #                 password="root",
+    #                 host='127.0.0.1',
+    #                 port = 3306,
+    #                 client.flag=CLIENT_MULTI_STATEMENTS)
+    #   data <- dbGetQuery(conn, sql_sentence)
+    #   dbDisconnect(conn)
+    #   
+    #   data
+    # })
+
+  },ignoreNULL = T,ignoreInit = T)
+  
+  #######################################
+  # insert
+  output$insert_values <- renderUI({
+    textInput(inputId = "insert_values",
+              label = "Insert values:(please use comma to separate)")
+  })
+  
+  observeEvent(input$click_insert, {
+    table <- input$table
+    insert_values <- input$insert_values
+    
+    sql_sentence <- paste0("INSERT INTO ",table,"VALUES (",insert_values,") ;")
+    
+    conn <- dbConnect(MySQL(), 
+                    dbname = "loan", 
+                    username="root", 
+                    password="root",
+                    host='127.0.0.1',
+                    port = 3306,
+                    client.flag=CLIENT_MULTI_STATEMENTS)
+    row_effected <- dbExecute(conn, sql_sentence)
+    dbDisconnect(conn)
+    
+    output$insert_result <- renderText({
+        paste0(row_effected," has been effected.")
+      })
+    
+    output$insert_table <- renderTable({
+      table <- input$table
+
+
+
+      sql_sentence <- paste0("SELECT * FROM ",table,
+                             " ORDER BY id DESC LIMIT 5;")
+
+      conn <- dbConnect(MySQL(),
+                    dbname = "loan",
+                    username="root",
+                    password="root",
+                    host='127.0.0.1',
+                    port = 3306,
+                    client.flag=CLIENT_MULTI_STATEMENTS)
+      data <- dbGetQuery(conn, sql_sentence)
+      dbDisconnect(conn)
+
+      data
+    })
+    
+    
+  },ignoreNULL = T,ignoreInit = T)
+  
+  output$insert_table_before <- renderTable({
+      table <- input$table
+
+      sql_sentence <- paste0("SELECT * FROM ",table,
+                             " ORDER BY id DESC LIMIT 1;")
+
+      conn <- dbConnect(MySQL(),
+                    dbname = "loan",
+                    username="root",
+                    password="root",
+                    host='127.0.0.1',
+                    port = 3306,
+                    client.flag=CLIENT_MULTI_STATEMENTS)
+      data <- dbGetQuery(conn, sql_sentence)
+      dbDisconnect(conn)
+
+      data
+    })
+
+  ##############################################
+  # delete
+  output$delete_where_column <- renderUI({
+    selectInput(inputId = "delete_where_column",
+                label = "Choose an attribute to locate:",
+                choices = na.omit(table_df[input$table]),
+                multiple = FALSE)
+  })
+  
+  output$delete_where_value <- renderUI({
+    textInput(inputId = "delete_where_value",
+              label = "Input the value to locate:")
+  })
+  
+  observeEvent(input$click_update, {
+    table <- input$table
+    delete_where_column <- input$delete_where_column
+    delete_where_value <- input$delete_where_value
+    
+    sql_sentence <- paste0("DELETE FROM ",table," WHERE ",delete_where_column," = ",delete_where_value," ;")
+    
+    conn <- dbConnect(MySQL(), 
+                    dbname = "loan", 
+                    username="root", 
+                    password="root",
+                    host='127.0.0.1',
+                    port = 3306,
+                    client.flag=CLIENT_MULTI_STATEMENTS)
+    row_effected <- dbExecute(conn, sql_sentence)
+    dbDisconnect(conn)
+    
+    output$delete_result <- renderText({
+        paste0(row_effected," has been effected.")
+      })
+    
+    
+    
+  },ignoreNULL = T,ignoreInit = T)
+  
   
   
 }
@@ -417,3 +576,45 @@ server <- function(input, output) {
 shinyApp(ui, server)
 ```
 
+
+
+
+```{r}
+table <- "loan"
+update_column <- "loan_amnt"
+update_to_be <- "2500"
+update_where_column <- "id"
+update_where_value <- "1"
+sql_sentence <- paste0("UPDATE ",table," SET ",update_column," = ",update_to_be, " WHERE ",update_where_column," = ",update_where_value,";")
+
+conn <- dbConnect(MySQL(), 
+                  dbname = "loan", 
+                  username="root", 
+                  password="root",
+                  host='127.0.0.1',
+                  port = 3306,
+                  client.flag=CLIENT_MULTI_STATEMENTS)
+#data <-  dbGetQuery(conn, "SELECT id FROM bankcard")
+#data <-  dbGetQuery(conn, "UPDATE loan SET loan_amnt = 3000 WHERE id = 1;")
+dbExecute(conn, sql_sentence)
+#dbExecute(conn, "INSERT INTO inquries VALUES (2002000,1,1,1);")
+
+dbDisconnect(conn)
+```
+
+
+```{r}
+killDbConnections <- function () {
+
+  all_cons <- dbListConnections(MySQL())
+
+  print(all_cons)
+
+  for(con in all_cons)
+    +  dbDisconnect(con)
+
+  print(paste(length(all_cons), " connections killed."))
+
+}
+# killDbConnections()
+```
