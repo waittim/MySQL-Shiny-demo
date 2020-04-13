@@ -12,6 +12,7 @@ library(dashboardthemes)
 library(ggplot2)
 ```
 
+# table df
 ```{r}
 table_name <- c("loan","borrower","bankcard","bank_accounts","inquries","installment","raw")
 loan <- c("id", "int_rate", "grade","loan_amnt","loan_status","disbursement_method","title","zip_code","funded_amnt","funded_amnt_inv","initial_list_status","purpose")
@@ -33,10 +34,7 @@ table_df$installment[1:length(installment)] <- installment
 table_df$raw[1:length(raw)] <- raw
 ```
 
-
-
-
-
+# theme
 ```{r}
 ### creating custom theme object
 theme_loan <- shinyDashboardThemeDIY(
@@ -52,7 +50,7 @@ theme_loan <- shinyDashboardThemeDIY(
     ,bodyBackColor = "rgb(248,248,248)"
   
     ### header
-    ,logoBackColor = "rgb(0,86,95)"
+    ,logoBackColor = "rgb(18,95,160)"
   
     ,headerButtonBackColor = "rgb(238,238,238)"
     ,headerButtonIconColor = "rgb(75,75,75)"
@@ -66,9 +64,9 @@ theme_loan <- shinyDashboardThemeDIY(
     ### sidebar
     ,sidebarBackColor = cssGradientThreeColors(
       direction = "down"
-      ,colorStart = "rgb(82,136,143)"
-      ,colorMiddle = "rgb(82,136,143)"
-      ,colorEnd = "rgb(82,136,143)"
+      ,colorStart = "rgb(118,158,207)"
+      ,colorMiddle = "rgb(118,158,207)"
+      ,colorEnd = "rgb(118,158,207)"
       ,colorStartPos = 0
       ,colorMiddlePos = 50
       ,colorEndPos = 100
@@ -96,9 +94,9 @@ theme_loan <- shinyDashboardThemeDIY(
   
     ,sidebarTabBackColorSelected = cssGradientThreeColors(
       direction = "right"
-      ,colorStart = "rgb(0,86,95)"
-      ,colorMiddle = "rgb(0,86,95)"
-      ,colorEnd = "rgb(0,86,95)"
+      ,colorStart = "rgb(18,95,160)"
+      ,colorMiddle = "rgb(18,95,160)"
+      ,colorEnd = "rgb(18,95,160)"
       ,colorStartPos = 0
       ,colorMiddlePos = 30
       ,colorEndPos = 100
@@ -108,9 +106,9 @@ theme_loan <- shinyDashboardThemeDIY(
   
     ,sidebarTabBackColorHover = cssGradientThreeColors(
       direction = "right"
-      ,colorStart = "rgb(0,86,95)"
-      ,colorMiddle = "rgb(0,86,95)"
-      ,colorEnd = "rgb(0,86,95)"
+      ,colorStart = "rgb(18,95,160)"
+      ,colorMiddle = "rgb(18,95,160)"
+      ,colorEnd = "rgb(18,95,160)"
       ,colorStartPos = 0
       ,colorMiddlePos = 30
       ,colorEndPos = 100
@@ -139,7 +137,7 @@ theme_loan <- shinyDashboardThemeDIY(
     ,tabBoxTabTextColor = "rgb(0,0,0)"
     ,tabBoxTabTextColorSelected = "rgb(0,0,0)"
     ,tabBoxBackColor = "rgb(255,255,255)"
-    ,tabBoxHighlightColor = "rgb(0,86,95)"
+    ,tabBoxHighlightColor = "rgb(18,95,160)"
     ,tabBoxBorderRadius = 5
   
     ### inputs
@@ -193,7 +191,9 @@ body <- dashboardBody(
                   collapsible = TRUE,
                   width = 12,
                   title = "Observation number",
-                  sliderInput(inputId = "row_num", label = "Choose observation number:", min = 1, max = 1000, value = 20)
+                  sliderInput(inputId = "row_num", 
+                              label = "Choose observation number:", 
+                              min = 1, max = 1000, value = 20)
                   ),
               #table output
               box(
@@ -213,7 +213,7 @@ body <- dashboardBody(
               box(uiOutput("column_select"),
                   sliderInput(inputId = "row_num2", 
                               label = "Choose observation number:", 
-                              min = 1, max = 1000, value = 20)),
+                              min = 1, max = 1000000, value = 20)),
               box(title = "Attribute Introduction:",
                   "There is an introduction about the attribute selected for visualization, which we do not have the information yet.",
                   solidHeader = TRUE,
@@ -286,6 +286,7 @@ body <- dashboardBody(
             fluidRow(
               box(uiOutput("delete_where_column"),
                   uiOutput("delete_where_value"),
+                  textOutput("test"),#######
                   actionButton(inputId = "click_delete",label = "Cofirm Delete",width = 200),
                   textOutput("delete_result"))
             )
@@ -377,7 +378,7 @@ server <- function(input, output) {
     
     data %>% 
       ggplot()+
-      geom_bar(aes(!!as.symbol(column)))+
+      geom_bar(aes(!!as.symbol(column)),fill="#125FA0")+
       theme_bw()
       
   })
@@ -431,30 +432,30 @@ server <- function(input, output) {
     dbDisconnect(conn)
     
     output$update_result <- renderText({
-        paste0(row_effected,"row(s) has been effected.")
+        paste0(row_effected, " row(s) has been effected.")
       })
     
-    # output$update_table <- renderTable({
-    #   table <- input$table
-    #   update_where_column <- input$update_where_column
-    #   update_where_value <- input$update_where_value
-    # 
-    #   
-    #   sql_sentence <- paste0("SELECT * FROM ",table,
-    #                          " WHERE ",update_where_column," = ",update_where_value,";")
-    #   
-    #   conn <- dbConnect(MySQL(), 
-    #                 dbname = "loan", 
-    #                 username="root", 
-    #                 password="root",
-    #                 host='127.0.0.1',
-    #                 port = 3306,
-    #                 client.flag=CLIENT_MULTI_STATEMENTS)
-    #   data <- dbGetQuery(conn, sql_sentence)
-    #   dbDisconnect(conn)
-    #   
-    #   data
-    # })
+    output$update_table <- renderTable({
+      table <- input$table
+      update_where_column <- input$update_where_column
+      update_where_value <- input$update_where_value
+
+
+      sql_sentence <- paste0("SELECT * FROM ",table,
+                             " WHERE ",update_where_column," = ",update_where_value,";")
+
+      conn <- dbConnect(MySQL(),
+                    dbname = "loan",
+                    username="root",
+                    password="root",
+                    host='127.0.0.1',
+                    port = 3306,
+                    client.flag=CLIENT_MULTI_STATEMENTS)
+      data <- dbGetQuery(conn, sql_sentence)
+      dbDisconnect(conn)
+
+      data
+    })
 
   },ignoreNULL = T,ignoreInit = T)
   
@@ -464,16 +465,18 @@ server <- function(input, output) {
     textInput(inputId = "insert_values",
               label = "Insert values:(please use comma to separate)")
   })
-  
+
   observeEvent(input$click_insert, {
     table <- input$table
     insert_values <- input$insert_values
     
-    sql_sentence <- paste0("INSERT INTO ",table,"VALUES (",insert_values,") ;")
+    sql_sentence <- paste0("INSERT INTO ",table," VALUES (",insert_values,") ;")
     
-    conn <- dbConnect(MySQL(), 
-                    dbname = "loan", 
-                    username="root", 
+    insert_process <- try({
+    
+    conn <- dbConnect(MySQL(),
+                    dbname = "loan",
+                    username="root",
                     password="root",
                     host='127.0.0.1',
                     port = 3306,
@@ -481,14 +484,20 @@ server <- function(input, output) {
     row_effected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
-    output$insert_result <- renderText({
-        paste0(row_effected," has been effected.")
-      })
+    }) #end try
     
+    
+    
+    output$insert_result <- renderText({
+      result <- try(paste0(row_effected,"row(s) has been effected."))
+      if (class(insert_process)=="try-error") {
+        # print(insert_process)
+        "Error: Insert failure. Please try again."
+      }else{result}
+      })
+
     output$insert_table <- renderTable({
       table <- input$table
-
-
 
       sql_sentence <- paste0("SELECT * FROM ",table,
                              " ORDER BY id DESC LIMIT 5;")
@@ -505,10 +514,10 @@ server <- function(input, output) {
 
       data
     })
-    
-    
+
+
   },ignoreNULL = T,ignoreInit = T)
-  
+
   output$insert_table_before <- renderTable({
       table <- input$table
 
@@ -536,22 +545,28 @@ server <- function(input, output) {
                 choices = na.omit(table_df[input$table]),
                 multiple = FALSE)
   })
-  
+
   output$delete_where_value <- renderUI({
     textInput(inputId = "delete_where_value",
               label = "Input the value to locate:")
   })
   
-  observeEvent(input$click_update, {
+  
+
+  observeEvent(input$click_delete, {
+    
     table <- input$table
     delete_where_column <- input$delete_where_column
     delete_where_value <- input$delete_where_value
+
+    sql_sentence <- paste0('DELETE FROM ',table,' WHERE ',delete_where_column,' = ',delete_where_value,';')
+
     
-    sql_sentence <- paste0("DELETE FROM ",table," WHERE ",delete_where_column," = ",delete_where_value," ;")
+    delete_process <- try({
     
-    conn <- dbConnect(MySQL(), 
-                    dbname = "loan", 
-                    username="root", 
+    conn <- dbConnect(MySQL(),
+                    dbname = "loan",
+                    username="root",
                     password="root",
                     host='127.0.0.1',
                     port = 3306,
@@ -559,14 +574,25 @@ server <- function(input, output) {
     row_effected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
+    }) # end try
+
     output$delete_result <- renderText({
-        paste0(row_effected," has been effected.")
+
+      result <- try(paste0(row_effected," row(s) has been effected."))
+      
+      if (class(delete_process)=="try-error") {
+        # print(insert_process)
+        "Error: Delete failure. Please try again."
+      }else{
+        result
+        }
+      
       })
-    
-    
-    
+
+
+
   },ignoreNULL = T,ignoreInit = T)
-  
+
   
   
 }
@@ -596,8 +622,9 @@ conn <- dbConnect(MySQL(),
                   client.flag=CLIENT_MULTI_STATEMENTS)
 #data <-  dbGetQuery(conn, "SELECT id FROM bankcard")
 #data <-  dbGetQuery(conn, "UPDATE loan SET loan_amnt = 3000 WHERE id = 1;")
-dbExecute(conn, sql_sentence)
+#dbExecute(conn, sql_sentence)
 #dbExecute(conn, "INSERT INTO inquries VALUES (2002000,1,1,1);")
+dbExecute(conn, "DELETE FROM inquries WHERE id = 2002001")
 
 dbDisconnect(conn)
 ```
