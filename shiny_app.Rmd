@@ -10,6 +10,13 @@ library(tidyverse)
 library(shinydashboard)
 library(dashboardthemes)
 library(ggplot2)
+library(readxl)
+```
+
+# load description
+```{r}
+LCDataDictionary <- read_excel("data/LCDataDictionary.xlsx", 
+    sheet = "LoanStats")
 ```
 
 # table df
@@ -215,7 +222,8 @@ body <- dashboardBody(
                               label = "Choose observation number:", 
                               min = 1, max = 1000000, value = 20)),
               box(title = "Attribute Introduction:",
-                  "There is an introduction about the attribute selected for visualization, which we do not have the information yet.",
+                  textOutput("col_description"),
+                  #"There is an introduction about the attribute selected for visualization, which we do not have the information yet.",
                   solidHeader = TRUE,
                   collapsible = TRUE)
             ),
@@ -357,6 +365,11 @@ server <- function(input, output) {
                 choices = na.omit(table_df[input$table]),
                 selected = "id", 
                 multiple = FALSE)
+  })
+  
+  output$col_description <- renderText({
+    column <- input$column
+    filter(LCDataDictionary, LoanStatNew == column)[['Description']]
   })
   
   output$col_plot <- renderPlot({
@@ -590,7 +603,6 @@ server <- function(input, output) {
       })
 
 
-
   },ignoreNULL = T,ignoreInit = T)
 
   
@@ -598,6 +610,7 @@ server <- function(input, output) {
 }
 ```
 
+# run the app
 ```{r}
 shinyApp(ui, server)
 ```
