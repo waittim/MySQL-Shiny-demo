@@ -241,7 +241,7 @@ END //
 
 DELIMITER ;
 
--- test
+-- test trigger 1
 INSERT INTO installment(id,installment, num_il_tl )
 VALUES
     (99999999, null, 3);
@@ -267,7 +267,7 @@ INSERT INTO bank_accounts
 SELECT id,mo_sin_rcnt_tl,num_accts_ever_120_pd,num_sats,num_tl_120dpd_2m,num_tl_30dpd,num_tl_90g_dpd_24m,num_tl_op_past_12m,tot_cur_bal
 FROM raw;
 
--- create trigger 1
+-- create trigger 2
 USE loan;
 DROP TRIGGER IF EXISTS bank_accounts_before_update;
 
@@ -292,7 +292,7 @@ END	IF;
 END//
 DELIMITER ;
 
--- Test Trigger 1
+-- Test Trigger 2
 UPDATE bank_accounts
 SET tot_cur_bal= 1400000
 WHERE id = 11;
