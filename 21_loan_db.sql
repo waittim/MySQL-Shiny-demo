@@ -86,8 +86,8 @@ mths_since_rcnt_il VARCHAR(10),
 num_il_tl INT(9)
 );
 
-LOAD DATA INFILE '/Users/waittim/Documents/MySQL/MySQL-Shiny-demo/data/loan.csv'
--- LOAD DATA INFILE '/Users/jiayiwang/Desktop/projects/database/project2/loan.csv'
+
+LOAD DATA INFILE '/Users/jiayiwang/Desktop/projects/database/project2/loan.csv'
 INTO TABLE raw
 CHARACTER SET latin1
 FIELDS TERMINATED BY ','
@@ -225,7 +225,7 @@ CREATE TABLE reminders (
     PRIMARY KEY (id)
 );
 
--- trigger 1
+-- trigger 2
 DROP TRIGGER IF EXISTS after_installment_insert;
 
 DELIMITER //
