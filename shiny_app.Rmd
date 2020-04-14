@@ -625,32 +625,6 @@ shinyApp(ui, server)
 
 
 
-
-```{r}
-table <- "loan"
-update_column <- "loan_amnt"
-update_to_be <- "2500"
-update_where_column <- "id"
-update_where_value <- "1"
-sql_sentence <- paste0("UPDATE ",table," SET ",update_column," = ",update_to_be, " WHERE ",update_where_column," = ",update_where_value,";")
-
-conn <- dbConnect(MySQL(), 
-                  dbname = "loan", 
-                  username="root", 
-                  password="root",
-                  host='127.0.0.1',
-                  port = 3306,
-                  client.flag=CLIENT_MULTI_STATEMENTS)
-#data <-  dbGetQuery(conn, "SELECT id FROM bankcard")
-#data <-  dbGetQuery(conn, "UPDATE loan SET loan_amnt = 3000 WHERE id = 1;")
-#dbExecute(conn, sql_sentence)
-#dbExecute(conn, "INSERT INTO inquries VALUES (2002000,1,1,1);")
-dbExecute(conn, "DELETE FROM inquries WHERE id = 2002001")
-
-dbDisconnect(conn)
-```
-
-
 ```{r}
 killDbConnections <- function () {
 
