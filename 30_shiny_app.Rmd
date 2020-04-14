@@ -219,7 +219,7 @@ body <- dashboardBody(
               #select solumn
               box(uiOutput("column_select"),
                   sliderInput(inputId = "row_num2", 
-                              label = "Choose observation number:", 
+                              label = "Choose number of observation:", 
                               min = 1, max = 1000000, value = 20)),
               box(title = "Attribute Introduction:",
                   textOutput("col_description"),
