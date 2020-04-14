@@ -197,9 +197,9 @@ body <- dashboardBody(
               box(solidHeader = TRUE,
                   collapsible = TRUE,
                   width = 12,
-                  title = "Observation number",
+                  title = "Number of observation",
                   sliderInput(inputId = "row_num", 
-                              label = "Choose observation number:", 
+                              label = "Choose number of observation:", 
                               min = 1, max = 1000, value = 20)
                   ),
               #table output
@@ -324,9 +324,9 @@ server <- function(input, output) {
                   choices = table_name, 
                   #selected = "loan", 
                   multiple = FALSE),
-      menuItem("Original Table", tabName = "origin_table", icon = icon("dashboard")),
-      menuItem("Attribute description", tabName = "one_col", icon = icon("dashboard")),
-      menuItem("Operation", tabName = "update", icon = icon("dashboard"),
+      menuItem("Original Table", tabName = "origin_table", icon = icon("list")),
+      menuItem("Attribute description", tabName = "one_col", icon = icon("chart-bar")),
+      menuItem("Operation", tabName = "update", icon = icon("wrench"),
                menuSubItem("Update", tabName = "update"),
                menuSubItem("Insert", tabName = "insert"),
                menuSubItem("Delete", tabName = "delete")),
@@ -434,6 +434,8 @@ server <- function(input, output) {
                            " SET ",update_column," = ",update_to_be, 
                            " WHERE ",update_where_column," = ",update_where_value,";")
     
+    update_process <- try({
+    
     conn <- dbConnect(MySQL(), 
                   dbname = "loan", 
                   username="root", 
@@ -441,11 +443,17 @@ server <- function(input, output) {
                   host='127.0.0.1',
                   port = 3306,
                   client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
+    }) # end try
+    
     output$update_result <- renderText({
-        paste0(row_effected, " row(s) has been effected.")
+      result <- try(paste0(row_affected," row(s) has been affected."))
+      if (class(update_process)=="try-error") {
+        "Error: Insert failure. Please try again."
+      }else{result}
+      
       })
     
     output$update_table <- renderTable({
@@ -494,7 +502,7 @@ server <- function(input, output) {
                     host='127.0.0.1',
                     port = 3306,
                     client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
     }) #end try
@@ -502,7 +510,7 @@ server <- function(input, output) {
     
     
     output$insert_result <- renderText({
-      result <- try(paste0(row_effected,"row(s) has been effected."))
+      result <- try(paste0(row_affected," row(s) has been affected."))
       if (class(insert_process)=="try-error") {
         # print(insert_process)
         "Error: Insert failure. Please try again."
@@ -584,14 +592,14 @@ server <- function(input, output) {
                     host='127.0.0.1',
                     port = 3306,
                     client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
     }) # end try
 
     output$delete_result <- renderText({
 
-      result <- try(paste0(row_effected," row(s) has been effected."))
+      result <- try(paste0(row_affected," row(s) has been affected."))
       
       if (class(delete_process)=="try-error") {
         # print(insert_process)
@@ -617,32 +625,6 @@ shinyApp(ui, server)
 
 
 
-
-```{r}
-table <- "loan"
-update_column <- "loan_amnt"
-update_to_be <- "2500"
-update_where_column <- "id"
-update_where_value <- "1"
-sql_sentence <- paste0("UPDATE ",table," SET ",update_column," = ",update_to_be, " WHERE ",update_where_column," = ",update_where_value,";")
-
-conn <- dbConnect(MySQL(), 
-                  dbname = "loan", 
-                  username="root", 
-                  password="root",
-                  host='127.0.0.1',
-                  port = 3306,
-                  client.flag=CLIENT_MULTI_STATEMENTS)
-#data <-  dbGetQuery(conn, "SELECT id FROM bankcard")
-#data <-  dbGetQuery(conn, "UPDATE loan SET loan_amnt = 3000 WHERE id = 1;")
-#dbExecute(conn, sql_sentence)
-#dbExecute(conn, "INSERT INTO inquries VALUES (2002000,1,1,1);")
-dbExecute(conn, "DELETE FROM inquries WHERE id = 2002001")
-
-dbDisconnect(conn)
-```
-
-
 ```{r}
 killDbConnections <- function () {
 
@@ -656,5 +638,5 @@ killDbConnections <- function () {
   print(paste(length(all_cons), " connections killed."))
 
 }
-# killDbConnections()
+killDbConnections()
 ```
