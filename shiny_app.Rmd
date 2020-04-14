@@ -434,6 +434,8 @@ server <- function(input, output) {
                            " SET ",update_column," = ",update_to_be, 
                            " WHERE ",update_where_column," = ",update_where_value,";")
     
+    update_process <- try({
+    
     conn <- dbConnect(MySQL(), 
                   dbname = "loan", 
                   username="root", 
@@ -444,8 +446,14 @@ server <- function(input, output) {
     row_effected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
+    }) # end try
+    
     output$update_result <- renderText({
-        paste0(row_effected, " row(s) has been effected.")
+      result <- try(paste0(row_effected," row(s) has been effected."))
+      if (class(update_process)=="try-error") {
+        "Error: Insert failure. Please try again."
+      }else{result}
+      
       })
     
     output$update_table <- renderTable({
@@ -502,7 +510,7 @@ server <- function(input, output) {
     
     
     output$insert_result <- renderText({
-      result <- try(paste0(row_effected,"row(s) has been effected."))
+      result <- try(paste0(row_effected," row(s) has been effected."))
       if (class(insert_process)=="try-error") {
         # print(insert_process)
         "Error: Insert failure. Please try again."
@@ -656,5 +664,5 @@ killDbConnections <- function () {
   print(paste(length(all_cons), " connections killed."))
 
 }
-# killDbConnections()
+killDbConnections()
 ```
