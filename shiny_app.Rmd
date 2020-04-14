@@ -443,13 +443,13 @@ server <- function(input, output) {
                   host='127.0.0.1',
                   port = 3306,
                   client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
     }) # end try
     
     output$update_result <- renderText({
-      result <- try(paste0(row_effected," row(s) has been effected."))
+      result <- try(paste0(row_affected," row(s) has been affected."))
       if (class(update_process)=="try-error") {
         "Error: Insert failure. Please try again."
       }else{result}
@@ -502,7 +502,7 @@ server <- function(input, output) {
                     host='127.0.0.1',
                     port = 3306,
                     client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
     }) #end try
@@ -510,7 +510,7 @@ server <- function(input, output) {
     
     
     output$insert_result <- renderText({
-      result <- try(paste0(row_effected," row(s) has been effected."))
+      result <- try(paste0(row_affected," row(s) has been affected."))
       if (class(insert_process)=="try-error") {
         # print(insert_process)
         "Error: Insert failure. Please try again."
@@ -592,14 +592,14 @@ server <- function(input, output) {
                     host='127.0.0.1',
                     port = 3306,
                     client.flag=CLIENT_MULTI_STATEMENTS)
-    row_effected <- dbExecute(conn, sql_sentence)
+    row_affected <- dbExecute(conn, sql_sentence)
     dbDisconnect(conn)
     
     }) # end try
 
     output$delete_result <- renderText({
 
-      result <- try(paste0(row_effected," row(s) has been effected."))
+      result <- try(paste0(row_affected," row(s) has been affected."))
       
       if (class(delete_process)=="try-error") {
         # print(insert_process)
